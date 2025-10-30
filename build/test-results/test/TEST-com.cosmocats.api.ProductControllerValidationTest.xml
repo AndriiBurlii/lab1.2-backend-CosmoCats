@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.cosmocats.api.ProductControllerValidationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-10-30T21:04:44" hostname="DESKTOP-H6EG9BA" time="0.441">
+  <properties/>
+  <testcase name="list_ok()" classname="com.cosmocats.api.ProductControllerValidationTest" time="0.254"/>
+  <testcase name="create_invalidRequest_returns400()" classname="com.cosmocats.api.ProductControllerValidationTest" time="0.168"/>
+  <testcase name="create_validRequest_returns201()" classname="com.cosmocats.api.ProductControllerValidationTest" time="0.013"/>
+  <system-out><![CDATA[23:04:40.802 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.cosmocats.api.ProductControllerValidationTest]: ProductControllerValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+23:04:41.054 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.cosmocats.CosmoCatsApplication for test class com.cosmocats.api.ProductControllerValidationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.5)
+
+2025-10-30T23:04:41.709+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : Starting ProductControllerValidationTest using Java 21.0.8 with PID 9360 (started by Admin in D:\Dz\Web_Java\lab1_2)
+2025-10-30T23:04:41.711+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : No active profile set, falling back to 1 default profile: "default"
+2025-10-30T23:04:44.275+02:00  INFO 9360 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2025-10-30T23:04:44.275+02:00  INFO 9360 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2025-10-30T23:04:44.278+02:00  INFO 9360 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2025-10-30T23:04:44.314+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : Started ProductControllerValidationTest in 3.134 seconds (process running for 4.923)
+]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (C:\Users\Admin\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.19\154da3a65b4f4a909d3e5bdec55d1b2b4cbb6ce1\byte-buddy-agent-1.14.19.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>
