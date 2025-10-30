@@ -29,3 +29,5 @@ HTML reports:
 ./gradlew wrapper
 git add gradlew gradlew.bat gradle/wrapper/*
 ```
+
+Coverage: ~70% (Jacoco gate 50% passed) ?
