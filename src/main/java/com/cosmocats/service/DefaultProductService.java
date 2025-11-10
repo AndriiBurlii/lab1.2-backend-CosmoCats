@@ -1,4 +1,3 @@
-
 package com.cosmocats.service;
 
 import com.cosmocats.api.dto.ProductRequest;
@@ -10,6 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Логіка CRUD для продуктів.
+ * ВАЖЛИВО: метод list() захищений фіче-флагом "cosmoCats".
+ */
 @Service
 @Transactional
 public class DefaultProductService implements ProductService {
@@ -21,34 +24,46 @@ public class DefaultProductService implements ProductService {
     }
 
     private static ProductResponse toDto(Product p) {
-        return new ProductResponse(p.getId(), p.getName(), p.getPrice(), p.getCategory());
+        return new ProductResponse(
+                p.getId(),
+                p.getName(),
+                p.getPrice(),
+                p.getCategory()
+        );
     }
 
     @Override
     public ProductResponse create(ProductRequest request) {
-        if (repository.existsByNameIgnoreCase(request.getName())) {
-            throw new IllegalArgumentException("product with the same name already exists");
-        }
-        Product p = new Product(null, request.getName(), request.getPrice(), request.getCategory());
+        Product p = new Product(
+                null,
+                request.getName(),
+                request.getPrice(),
+                request.getCategory()
+        );
         return toDto(repository.save(p));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductResponse get(long id) {
-        Product p = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("product not found"));
+        Product p = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("product not found"));
         return toDto(p);
     }
-
     @Override
+    @FeatureFlag("cosmoCats")
     @Transactional(readOnly = true)
     public List<ProductResponse> list() {
-        return repository.findAll().stream().map(DefaultProductService::toDto).toList();
+        return repository.findAll()
+                .stream()
+                .map(DefaultProductService::toDto)
+                .toList();
     }
 
     @Override
     public ProductResponse update(long id, ProductRequest request) {
-        Product p = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("product not found"));
+        Product p = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("product not found"));
         p.setName(request.getName());
         p.setPrice(request.getPrice());
         p.setCategory(request.getCategory());
@@ -57,7 +72,9 @@ public class DefaultProductService implements ProductService {
 
     @Override
     public void delete(long id) {
-        if (!repository.existsById(id)) throw new IllegalArgumentException("product not found");
+        if (!repository.existsById(id)) {
+            throw new IllegalArgumentException("product not found");
+        }
         repository.deleteById(id);
     }
 }

@@ -1,0 +1,10 @@
+
+spring:
+  application:
+    name: lab2-feature-toggle
+
+feature:
+  cosmoCats:
+    enabled: true
+  kittyProducts:
+    enabled: false
