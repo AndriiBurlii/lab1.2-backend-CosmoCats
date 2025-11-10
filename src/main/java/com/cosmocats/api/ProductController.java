@@ -1,4 +1,3 @@
-
 package com.cosmocats.api;
 
 import com.cosmocats.api.dto.ProductRequest;
@@ -6,8 +5,10 @@ import com.cosmocats.api.dto.ProductResponse;
 import com.cosmocats.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -15,16 +16,20 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService service;
-    public ProductController(ProductService service) { this.service = service; }
+
+    public ProductController(ProductService service) {
+        this.service = service;
+    }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse create(@Valid @RequestBody ProductRequest request) {
-        return service.create(request);
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
+        ProductResponse created = service.create(request);
+        URI location = URI.create("/api/v1/products/" + created.getId());
+        return ResponseEntity.created(location).body(created); // 201 + Location
     }
 
     @GetMapping("/{id}")
-    public ProductResponse get(@PathVariable long id) {
+    public ProductResponse getById(@PathVariable long id) {
         return service.get(id);
     }
 
