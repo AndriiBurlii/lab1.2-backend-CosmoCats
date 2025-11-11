@@ -1,87 +1,93 @@
-# Lab 1.2 — CosmoCats Intergalactic Marketplace 🪐  
-**Course:** Java Web (Spring Boot + Gradle)  
-**Author:** Andrii Burlii (ІО-32)  
-**Variant:** Lab 1.2 — Unit Testing & Code Coverage  
+# Лабораторна робота 2 — Котики під контролем (Feature Toggle + Spring AOP)
+
+**Автор:** Бурлій Андрій, ІО‑32  
+**База:** ЛР‑1.2 (гілка `lab2-feature-toggle` у цьому ж репозиторії)
 
 ---
 
-## 🎯 **Мета роботи**
-Протестувати функціонал інтергалактичного ринку та підготувати код до production-якості:
-- Розробити **юнiт-тести** для сервісного рівня.
-- Написати **тести контролера** з валідацією (позитивні та негативні кейси).
-- Досягнути **покриття коду ≥ 50 %** за допомогою **JaCoCo**.
-- Налаштувати **GitHub Actions CI** для автоматичної перевірки тестів та coverage.
-- Реалізувати **WireMock-stubbing** для імітації зовнішніх сервісів.
+## ✅ Що реалізовано
+- Feature Toggle через властивості `feature.<name>.enabled`.
+- Кастомна анотація `@FeatureFlag("cosmoCats")`.
+- AOP‑аспект `FeatureToggleAspect` з `@Around`:
+  - якщо фіча увімкнена → виконується метод;
+  - якщо вимкнена → кидається `FeatureNotAvailableException`.
+- Захищено метод `DefaultProductService#list()`.
+- `GlobalExceptionHandler` → 403 Forbidden при вимкненій фічі.
+- Прапорці читаються з `Environment` (працює і з YAML, і з CLI).
 
 ---
 
-## ⚙️ **Технології та стек**
-| Layer | Technology |
-|-------|-------------|
-| Backend | Spring Boot 3.3.5 |
-| Build tool | Gradle 8 |
-| Java version | 21 (Temurin) |
-| Database | H2 (in-memory) |
-| Testing | JUnit 5, Mockito, WireMock |
-| Coverage | JaCoCo 0.8.11 |
-| CI/CD | GitHub Actions |
+## 📂 Ключові файли
+```
+src/main/java/com/cosmocats/service/FeatureFlag.java
+src/main/java/com/cosmocats/service/FeatureToggleAspect.java
+src/main/java/com/cosmocats/service/FeatureToggleService.java
+src/main/java/com/cosmocats/service/FeatureNotAvailableException.java
+src/main/java/com/cosmocats/service/DefaultProductService.java
+src/main/java/com/cosmocats/exception/GlobalExceptionHandler.java
+src/main/resources/application.yml
+```
+
+### `application.yml`
+```yaml
+feature:
+  cosmoCats:
+    enabled: true
+  kittyProducts:
+    enabled: false
+```
+
+> У ресурсах має бути **лише один** конфіг: `application.yml` (без `application.yaml`).
 
 ---
 
-## 🧩 **Архітектура**
-- **API versioning:** `/api/v1/products`
-- **Service abstraction:** `ProductService` + `DefaultProductService`
-- **DTO validation:** `@Valid`, `@NotBlank`, `@Positive`
-- **Global exception handling:** повертає JSON-відповіді з кодом `400 Bad Request`
-- **WireMock tests:** `ExternalRateClientWireMockTest`
-
----
-
-## 🧪 **Тестування**
-Покрито всі основні рівні:
-- ✅ Сервісний шар — юніт-тести з Mockito  
-- ✅ Контролер — MockMvc тести (позитивні + негативні сценарії)  
-- ✅ WireMock — перевірка інтеграції із зовнішнім клієнтом  
-
----
-
-## 📊 **Результати тестування**
-> **Всі тести успішно пройдені.**
-
-| Category | Result |
-|-----------|--------|
-| Tests passed | ✅ 12 / 12 |
-| Coverage | 🟢 **~70 %** |
-| Jacoco gate | ✅ ≥ 50 % (пройдено) |
-| CI status | 🟢 **All checks passed** |
-
-![Jacoco Coverage Report](coverage.png)  
-  
-
-
-
-
-
----
-
-## 🚀 **Як запустити**
+## ▶️ Запуск
 ```bash
-# Запуск програми
 ./gradlew bootRun
+# або явно
+./gradlew bootRun --args="--feature.cosmoCats.enabled=true"
+./gradlew bootRun --args="--feature.cosmoCats.enabled=false"
+```
 
-# Запуск тестів і генерація звітів
-./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
+## 🔌 Перевірка
+```
+GET /api/v1/products
+```
+- `enabled=true` → `200 OK`
+- `enabled=false` → `403 Forbidden`
 
-✅ Висновки
+### Скріни
+![200 OK]
+![403 Forbidden]
 
-У ході лабораторної роботи:
+---
 
--Створено юніт-тести для сервісного шару та контролерів.
+## 🧪 Тести та CI
+```bash
+./gradlew clean test
+```
+У CI тести запускаються з прапорцем:
+```bash
+./gradlew clean test jacocoTestReport jacocoTestCoverageVerification -Dfeature.cosmoCats.enabled=true
+```
 
--Досягнуто покриття коду ~70 %, що перевищує вимогу (50 %).
+---
 
--Реалізовано WireMock-тестування для зовнішніх залежностей.
+## 🛠 Деталі реалізації
+- `@FeatureFlag("cosmoCats")` встановлено на `DefaultProductService#list()`.
+- `FeatureToggleService` читає `feature.<name>.enabled` із середовища.
+- `GlobalExceptionHandler` мапить `FeatureNotAvailableException` на 403.
+- У `DefaultProductService#create(...)`:
+  - перевірка дубліката, кидання `IllegalArgumentException`;
+  - захист від `null` після `save(...)`.
 
--Налаштовано CI-пайплайн GitHub Actions для автоматичної перевірки.
+---
 
--Проєкт повністю відповідає вимогам до Lab 1.2.
+## 🌿 Гілка та PR
+```bash
+git checkout -b lab2-feature-toggle
+git add .
+git commit -m "LAB-2: Feature Toggle via Spring AOP (+403 handler)"
+git push -u origin lab2-feature-toggle
+# PR: lab2-feature-toggle → main
+```
