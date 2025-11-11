@@ -1,31 +1,43 @@
+### 🚀 Lab 1.2 — *CosmoCats Intergalactic Marketplace*
 
-# Lab 1.2 — CosmoCats (Spring Boot + Gradle)
+#### 🎯 Мета роботи
+- Протестувати функціонал інтергалактичного ринку та підготувати код до рівня **production-ready**.  
+- Реалізувати **юніт-тестування сервісного рівня** та **інтеграційні тести контролерів**.  
+- Досягти **мінімального coverage ≥50% (фактично ~70%)**.  
+- Налаштувати **GitHub Actions CI** для автоматичної перевірки тестів і покриття.  
+- Використати **WireMock** для імітації зовнішніх HTTP-сервісів.
 
-- API versioning: `/api/v1/...`
-- Service layer has an interface (`ProductService`) and an implementation (`DefaultProductService`).
-- Simplified error handling (no `ProblemDetails`), see `GlobalExceptionHandler`.
-- Jacoco coverage gate: **>= 50%**.
+---
 
-## Run locally
+#### 🧩 Основні компоненти
+| Рівень | Опис |
+|:--|:--|
+| **API** | `/api/v1/products` — REST CRUD із валідацією даних |
+| **Service Layer** | `ProductService` + `DefaultProductService` (mocked у тестах) |
+| **Error Handling** | глобальний `@ControllerAdvice` через `ProblemDetails` |
+| **Validation Tests** | позитивні та негативні кейси (MockMvc) |
+| **External Stub** | WireMock (`ExternalRateClientWireMockTest`) |
 
-```bash
-./gradlew bootRun
-```
+---
 
-## Tests + coverage
+#### 🧪 Результати тестування
+✅ **12 тестів** успішно пройдено  
+📊 **Coverage (Jacoco): ~70%**  
+🟢 **CI Pipeline:** успішний (`build passed`)
 
-```bash
-./gradlew clean test jacocoTestReport jacocoTestCoverageVerification
-```
+---
 
-HTML reports:
-- Unit tests: `build/reports/tests/test/index.html`
-- Coverage: `build/reports/jacoco/test/html/index.html`
+#### 🖼️ Coverage Report
+![Jacoco Coverage Report](https://raw.githubusercontent.com/AndriiBurlii/lab1.2-backend-CosmoCats/lab1.2/coverage.png)
 
-## GitHub Actions
-- See `.github/workflows/ci.yml`
-- Ensure you commit the Gradle wrapper to run CI:
-```bash
-./gradlew wrapper
-git add gradlew gradlew.bat gradle/wrapper/*
-```
+
+---
+
+#### 🧰 Використані технології
+Spring Boot • Gradle • JUnit 5 • Mockito • WireMock • Jacoco • GitHub Actions
+
+---
+
+#### 👨‍💻 Автор
+**Андрій Бурлій (ІО-32)**  
+
