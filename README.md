@@ -58,7 +58,10 @@ GET /api/v1/products
 
 ### Скріни
 ![200 OK]
+![200 OK](docs/200_ok.png)
 ![403 Forbidden]
+![403 Forbidden](docs/403_forbidden.png)
+
 
 ---
 
