@@ -19,16 +19,24 @@ repositories {
 }
 
 dependencies {
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
     // --- Основні залежності ---
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
 
     // --- Тести ---
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-core:5.13.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.13.0'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 
     // ✅ WireMock standalone — містить усе необхідне (Jetty, Servlet, Jackson)
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.0'
@@ -36,6 +44,10 @@ dependencies {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+
+    
+    systemProperty 'user.timezone', 'UTC'
+
     testLogging {
         events "passed", "skipped", "failed"
         exceptionFormat "full"
@@ -63,10 +75,15 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'INSTRUCTION'
                 value = 'COVEREDRATIO'
-                minimum = 0.50
+                minimum = 0.80
             }
         }
     }
 }
 
 check.dependsOn jacocoTestCoverageVerification
+
+
+tasks.named('bootRun') {
+    systemProperty 'user.timezone', 'UTC'
+}

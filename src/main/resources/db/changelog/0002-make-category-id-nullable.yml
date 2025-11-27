@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0002-make-category-id-nullable
+      author: cosmocats
+      changes:
+        - dropNotNullConstraint:
+            tableName: products
+            columnName: category_id
+            columnDataType: BIGINT
