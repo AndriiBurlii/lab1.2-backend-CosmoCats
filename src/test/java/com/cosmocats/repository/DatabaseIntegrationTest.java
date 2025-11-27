@@ -121,6 +121,7 @@ class DatabaseIntegrationTest {
         b.setCategoryEntity(gadgets);
         b = productRepository.save(b);
 
+        // Два замовлення
         Order o1 = orderRepository.save(
                 new Order(null, "ORD-A", "a@cats.io", OffsetDateTime.now())
         );
@@ -128,14 +129,16 @@ class DatabaseIntegrationTest {
                 new Order(null, "ORD-B", "b@cats.io", OffsetDateTime.now())
         );
 
-        // ВАЖЛИВО: ставимо order перед збереженням, бо order_id NOT NULL
+        // ВАЖЛИВО: жодних дублікатів (order_id, product_id)
+        // o1: A (5 шт) + B (2 шт)
+        // o2: A (3 шт)
         OrderLine l1 = new OrderLine(null, a, 5, new BigDecimal("10.00"));
         l1.setOrder(o1);
 
-        OrderLine l2 = new OrderLine(null, a, 3, new BigDecimal("10.00"));
+        OrderLine l2 = new OrderLine(null, b, 2, new BigDecimal("20.00"));
         l2.setOrder(o1);
 
-        OrderLine l3 = new OrderLine(null, b, 2, new BigDecimal("20.00"));
+        OrderLine l3 = new OrderLine(null, a, 3, new BigDecimal("10.00"));
         l3.setOrder(o2);
 
         orderLineRepository.saveAll(List.of(l1, l2, l3));
@@ -147,7 +150,7 @@ class DatabaseIntegrationTest {
         List<ProductSalesProjection> projections = page.getContent();
         assertThat(projections).hasSize(2);
 
-        // A має 8 штук, B має 2
+        // A має 8 штук (5 + 3), B має 2
         assertThat(projections.get(0).productName()).isEqualTo("A");
         assertThat(projections.get(0).totalQuantity()).isEqualTo(8L);
         assertThat(projections.get(1).productName()).isEqualTo("B");

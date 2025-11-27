@@ -1,4 +1,3 @@
-
 package com.cosmocats.api;
 
 import com.cosmocats.api.dto.ProductRequest;
@@ -6,8 +5,11 @@ import com.cosmocats.api.dto.ProductResponse;
 import com.cosmocats.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -15,12 +17,25 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService service;
-    public ProductController(ProductService service) { this.service = service; }
+
+    public ProductController(ProductService service) {
+        this.service = service;
+    }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse create(@Valid @RequestBody ProductRequest request) {
-        return service.create(request);
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
+        ProductResponse created = service.create(request);
+
+        // ⚠️ Якщо ProductResponse — це клас з getId(), тоді заміни created.id() на created.getId()
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(created);
     }
 
     @GetMapping("/{id}")
@@ -34,7 +49,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable long id, @Valid @RequestBody ProductRequest request) {
+    public ProductResponse update(@PathVariable long id,
+                                  @Valid @RequestBody ProductRequest request) {
         return service.update(id, request);
     }
 
