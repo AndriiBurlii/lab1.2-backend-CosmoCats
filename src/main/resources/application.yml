@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lab3-cosmocats-db
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cosmocats
+    username: cosmo
+    password: cosmo
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yml
+
+feature:
+  cosmoCats:
+    enabled: true      # ⬅ ВАЖЛИВО! Вмикає фічу
+  kittyProducts:
+    enabled: false     # можна лишити як є
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
