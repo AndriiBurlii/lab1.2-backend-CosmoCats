@@ -11,7 +11,12 @@ class ProductDomainTest {
     @Test
     void fullPropertiesAndCategoryEntity() {
         Category category = new Category(1L, "FOOD", "Space food");
-        Product product = new Product(1L, "Burger", new BigDecimal("10.00"), "FOOD");
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Burger");
+        product.setPrice(new BigDecimal("10.00"));
+        product.setCategory("FOOD");
         product.setCategoryEntity(category);
 
         assertEquals(1L, product.getId());
@@ -25,10 +30,18 @@ class ProductDomainTest {
     void equalsAndHashCodeUseMainFields() {
         Category category = new Category(1L, "FOOD", "Space food");
 
-        Product p1 = new Product(1L, "Burger", new BigDecimal("10.00"), "FOOD");
+        Product p1 = new Product();
+        p1.setId(1L);
+        p1.setName("Burger");
+        p1.setPrice(new BigDecimal("10.00"));
+        p1.setCategory("FOOD");
         p1.setCategoryEntity(category);
 
-        Product p2 = new Product(1L, "Burger", new BigDecimal("10.00"), "FOOD");
+        Product p2 = new Product();
+        p2.setId(1L);
+        p2.setName("Burger");
+        p2.setPrice(new BigDecimal("10.00"));
+        p2.setCategory("FOOD");
         p2.setCategoryEntity(category);
 
         assertEquals(p1, p2);
