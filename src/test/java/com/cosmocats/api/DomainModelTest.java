@@ -6,15 +6,13 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DomainModelTest {
 
     @Test
     void category_gettersAndSetters_work() {
         Category category = new Category();
-
-        // припускаємо стандартні сетери та гетери
         category.setId(1L);
         category.setCode("FOOD");
         category.setTitle("Food");
@@ -26,6 +24,7 @@ class DomainModelTest {
 
     @Test
     void product_gettersAndSetters_work() {
+        // окремо створимо категорію
         Category category = new Category();
         category.setId(1L);
         category.setCode("FOOD");
@@ -35,11 +34,13 @@ class DomainModelTest {
         product.setId(10L);
         product.setName("Space Pizza");
         product.setPrice(new BigDecimal("9.99"));
-        product.setCategory(category);
+
+        // ВАЖЛИВО: Product.setCategory очікує String
+        product.setCategory(category.getCode());
 
         assertEquals(10L, product.getId());
         assertEquals("Space Pizza", product.getName());
         assertEquals(new BigDecimal("9.99"), product.getPrice());
-        assertEquals(category, product.getCategory());
+        assertEquals(category.getCode(), product.getCategory());
     }
 }
