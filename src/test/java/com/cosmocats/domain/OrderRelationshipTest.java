@@ -41,34 +41,59 @@ class OrderRelationshipTest {
 
     @Test
     void setLinesReplacesCollectionAndUpdatesBackReference() {
+        // старе замовлення, до якого "нормально" прикріплена лінія
+        Order oldOrder = new Order();
+        OrderLine existingLine = new OrderLine();
+        oldOrder.addLine(existingLine); // existingLine.order = oldOrder, oldOrder.lines = [existingLine]
+
+        // нове замовлення, у якого в списку лежить та сама лінія,
+        // але її order все ще вказує на oldOrder
         Order order = new Order();
+        order.getLines().add(existingLine); // order.lines = [existingLine], existingLine.order = oldOrder
+
+        // нові лінії, які мають прийти у setLines(...)
         OrderLine line1 = new OrderLine();
         OrderLine line2 = new OrderLine();
-
-        order.addLine(line1);
-        assertEquals(order, line1.getOrder());
-
         List<OrderLine> newLines = new ArrayList<>();
+        newLines.add(line1);
         newLines.add(line2);
 
+        // виклик методу, який ми тестуємо
         order.setLines(newLines);
 
-        assertEquals(1, order.getLines().size());
+        // стара лінія відчеплена від oldOrder і від будь-якого order
+        assertFalse(oldOrder.getLines().contains(existingLine));
+        assertNull(existingLine.getOrder());
+
+        // нові лінії прив'язані до нового order
+        assertEquals(2, order.getLines().size());
+        assertTrue(order.getLines().contains(line1));
         assertTrue(order.getLines().contains(line2));
+        assertEquals(order, line1.getOrder());
         assertEquals(order, line2.getOrder());
-        assertNull(line1.getOrder());
     }
 
     @Test
     void setLinesWithNullClearsExistingLines() {
-        Order order = new Order();
-        OrderLine line = new OrderLine();
-        order.addLine(line);
+        // старе замовлення з нормально прикріпленою лінією
+        Order oldOrder = new Order();
+        OrderLine existingLine = new OrderLine();
+        oldOrder.addLine(existingLine); // existingLine.order = oldOrder
 
+        // нове замовлення, де в списку лежить ця лінія,
+        // але її order все ще oldOrder
+        Order order = new Order();
+        order.getLines().add(existingLine);
+
+        // передаємо null у setLines
         order.setLines(null);
 
+        // список ліній у нового order очищений
         assertTrue(order.getLines().isEmpty());
-        assertNull(line.getOrder());
+
+        // лінія відчеплена від старого замовлення і не має order
+        assertFalse(oldOrder.getLines().contains(existingLine));
+        assertNull(existingLine.getOrder());
     }
 
     @Test
