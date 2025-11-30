@@ -42,20 +42,7 @@ dependencies {
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.0'
 }
 
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-
-    systemProperty 'user.timezone', 'UTC'
-
-    testLogging {
-        events "passed", "skipped", "failed"
-        exceptionFormat "full"
-        showStandardStreams = true
-    }
-
-    // після кожного тесту будуємо звіт jacoco
-    finalizedBy jacocoTestReport
-}
+// --- Jacoco загальні налаштування ---
 
 jacoco {
     toolVersion = "0.8.11"
@@ -71,6 +58,25 @@ def jacocoExcludes = [
         '**/client/**'
 ]
 
+// --- Налаштування тестів ---
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+
+    systemProperty 'user.timezone', 'UTC'
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    // після кожного тесту будуємо звіт jacoco
+    finalizedBy jacocoTestReport
+}
+
+// --- Звіт Jacoco ---
+
 jacocoTestReport {
     dependsOn test
 
@@ -80,20 +86,28 @@ jacocoTestReport {
         csv.required = false
     }
 
+    // Беремо стандартні вихідні директорії Jacoco
+    // і просто відфільтровуємо з них зайві пакети/класи
     classDirectories.setFrom(
-            fileTree(dir: "$buildDir/classes/java/main") {
-                exclude jacocoExcludes
-            }
+            files(classDirectories.files.collect { f ->
+                fileTree(f) {
+                    exclude jacocoExcludes
+                }
+            })
     )
 }
+
+// --- Перевірка покриття Jacoco ---
 
 jacocoTestCoverageVerification {
     dependsOn test
 
     classDirectories.setFrom(
-            fileTree(dir: "$buildDir/classes/java/main") {
-                exclude jacocoExcludes
-            }
+            files(classDirectories.files.collect { f ->
+                fileTree(f) {
+                    exclude jacocoExcludes
+                }
+            })
     )
 
     violationRules {
@@ -109,6 +123,8 @@ jacocoTestCoverageVerification {
 }
 
 check.dependsOn jacocoTestCoverageVerification
+
+// --- bootRun у таймзоні UTC ---
 
 tasks.named('bootRun') {
     systemProperty 'user.timezone', 'UTC'
