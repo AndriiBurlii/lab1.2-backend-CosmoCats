@@ -1,6 +1,8 @@
 package com.cosmocats.api;
 
+import com.cosmocats.CosmoCatsApplication;
 import com.cosmocats.api.dto.ProductRequest;
+import com.cosmocats.config.PostgresTestConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import java.math.BigDecimal;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
