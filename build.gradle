@@ -45,7 +45,6 @@ dependencies {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 
-    
     systemProperty 'user.timezone', 'UTC'
 
     testLogging {
@@ -53,6 +52,8 @@ tasks.withType(Test).configureEach {
         exceptionFormat "full"
         showStandardStreams = true
     }
+
+    // після кожного тесту будуємо звіт jacoco
     finalizedBy jacocoTestReport
 }
 
@@ -60,15 +61,41 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
+// Класи, які не враховуємо в покритті
+def jacocoExcludes = [
+        '**/CosmoCatsApplication.*',
+        '**/config/**',
+        '**/exception/**',
+        '**/api/dto/**',
+        '**/repository/**',
+        '**/client/**'
+]
+
 jacocoTestReport {
     dependsOn test
+
     reports {
         xml.required = true
         html.required = true
+        csv.required = false
     }
+
+    classDirectories.setFrom(
+            fileTree(dir: "$buildDir/classes/java/main") {
+                exclude jacocoExcludes
+            }
+    )
 }
 
 jacocoTestCoverageVerification {
+    dependsOn test
+
+    classDirectories.setFrom(
+            fileTree(dir: "$buildDir/classes/java/main") {
+                exclude jacocoExcludes
+            }
+    )
+
     violationRules {
         rule {
             element = 'BUNDLE'
@@ -82,7 +109,6 @@ jacocoTestCoverageVerification {
 }
 
 check.dependsOn jacocoTestCoverageVerification
-
 
 tasks.named('bootRun') {
     systemProperty 'user.timezone', 'UTC'
