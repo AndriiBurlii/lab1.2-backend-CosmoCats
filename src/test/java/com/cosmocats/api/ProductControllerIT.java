@@ -17,9 +17,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-@SpringBootTest
+@SpringBootTest(classes = {CosmoCatsApplication.class, PostgresTestConfig.class})
 @AutoConfigureMockMvc
 class ProductControllerIT {
+
 
     @Autowired
     MockMvc mvc;
