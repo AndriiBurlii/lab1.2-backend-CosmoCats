@@ -1,85 +1,74 @@
 package com.cosmocats.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Юніт-тести для GlobalExceptionHandler.
+ * Покриваємо основні гілки:
+ * - ResourceNotFoundException -> 404
+ * - UniqueValueAlreadyExistsException -> 409
+ * - інші Exception -> 500
+ */
 class GlobalExceptionHandlerTest {
 
-    private GlobalExceptionHandler handler;
-    private HttpServletRequest request;
-
-    @BeforeEach
-    void setUp() {
-        handler = new GlobalExceptionHandler();
-        request = new MockHttpServletRequest("GET", "/api/test");
-    }
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void handleResourceNotFound_returns404() {
-        ResourceNotFoundException ex = new ResourceNotFoundException("Product", 42L);
+    void handleResourceNotFound_returns404WithMessage() {
+        // given
+        ResourceNotFoundException ex =
+                new ResourceNotFoundException("Product with id=42 not found");
 
-        ResponseEntity<?> response = handler.handleResourceNotFound(ex, request);
+        // when
+        ResponseEntity<ProblemDetail> response = handler.handleResourceNotFound(ex);
 
+        // then
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
+
+        ProblemDetail body = response.getBody();
+        assertNotNull(body);
+        assertEquals(HttpStatus.NOT_FOUND.value(), body.getStatus());
+        assertTrue(body.getDetail().contains("Product with id=42 not found"));
     }
 
     @Test
-    void handleUniqueValueAlreadyExists_returns409() {
+    void handleUniqueValueAlreadyExists_returns409WithMessage() {
+        // given
         UniqueValueAlreadyExistsException ex =
-                new UniqueValueAlreadyExistsException("products", "name");
+                new UniqueValueAlreadyExistsException("Product name already used");
 
-        ResponseEntity<?> response = handler.handleUniqueValueAlreadyExists(ex, request);
+        // when
+        ResponseEntity<ProblemDetail> response = handler.handleUniqueValueAlreadyExists(ex);
 
+        // then
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
+
+        ProblemDetail body = response.getBody();
+        assertNotNull(body);
+        assertEquals(HttpStatus.CONFLICT.value(), body.getStatus());
+        assertTrue(body.getDetail().contains("Product name already used"));
     }
 
     @Test
-    void handleNoResourceFound_returns404() {
-        NoResourceFoundException ex = new NoResourceFoundException("GET", "/wrong-url");
+    void handleGenericException_returns500AndNonEmptyDetail() {
+        // given
+        Exception ex = new RuntimeException("Unexpected boom");
 
-        ResponseEntity<?> response = handler.handleNoResourceFound(ex, request);
+        // when
+        ResponseEntity<ProblemDetail> response = handler.handleException(ex);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-    }
-
-    @Test
-    void handleTypeMismatch_returns400() throws NoSuchMethodException {
-        Method m = SampleClass.class.getMethod("sampleMethod", Long.class);
-        MethodArgumentTypeMismatchException ex =
-                new MethodArgumentTypeMismatchException("abc", Long.class, "id", null, null);
-
-        ResponseEntity<?> response = handler.handleTypeMismatch(ex, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-    }
-
-    @Test
-    void handleGenericException_returns500() {
-        RuntimeException ex = new RuntimeException("boom");
-
-        ResponseEntity<?> response = handler.handleOther(ex, request);
-
+        // then
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNotNull(response.getBody());
-    }
 
-    // Допоміжний клас для рефлексії у type-mismatch тесті
-    static class SampleClass {
-        public void sampleMethod(Long id) {
-        }
+        ProblemDetail body = response.getBody();
+        assertNotNull(body);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), body.getStatus());
+        assertNotNull(body.getDetail());
+        assertFalse(body.getDetail().isBlank());
     }
 }
