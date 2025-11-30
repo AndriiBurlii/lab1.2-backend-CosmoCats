@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.435s</div>
+<div class="counter">0.165s</div>
 <p>duration</p>
 </div>
 </td>
@@ -66,9 +66,6 @@
 <li>
 <a href="#tab1">Standard output</a>
 </li>
-<li>
-<a href="#tab2">Standard error</a>
-</li>
 </ul>
 <div id="tab0" class="tab">
 <h2>Tests</h2>
@@ -82,17 +79,17 @@
 </thead>
 <tr>
 <td class="success">create_invalidRequest_returns400()</td>
-<td class="success">0.168s</td>
+<td class="success">0.030s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">create_validRequest_returns201()</td>
-<td class="success">0.013s</td>
+<td class="success">0.023s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">list_ok()</td>
-<td class="success">0.254s</td>
+<td class="success">0.112s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -100,8 +97,8 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>23:04:40.802 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.cosmocats.api.ProductControllerValidationTest]: ProductControllerValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-23:04:41.054 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.cosmocats.CosmoCatsApplication for test class com.cosmocats.api.ProductControllerValidationTest
+<pre>2025-11-27T22:18:39.496Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.cosmocats.api.ProductControllerValidationTest]: ProductControllerValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2025-11-27T22:18:39.533Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.cosmocats.CosmoCatsApplication for test class com.cosmocats.api.ProductControllerValidationTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -112,22 +109,12 @@
 
  :: Spring Boot ::                (v3.3.5)
 
-2025-10-30T23:04:41.709+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : Starting ProductControllerValidationTest using Java 21.0.8 with PID 9360 (started by Admin in D:\Dz\Web_Java\lab1_2)
-2025-10-30T23:04:41.711+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : No active profile set, falling back to 1 default profile: &quot;default&quot;
-2025-10-30T23:04:44.275+02:00  INFO 9360 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
-2025-10-30T23:04:44.275+02:00  INFO 9360 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
-2025-10-30T23:04:44.278+02:00  INFO 9360 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
-2025-10-30T23:04:44.314+02:00  INFO 9360 --- [    Test worker] c.c.api.ProductControllerValidationTest  : Started ProductControllerValidationTest in 3.134 seconds (process running for 4.923)
-</pre>
-</span>
-</div>
-<div id="tab2" class="tab">
-<h2>Standard error</h2>
-<span class="code">
-<pre>WARNING: A Java agent has been loaded dynamically (C:\Users\Admin\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.19\154da3a65b4f4a909d3e5bdec55d1b2b4cbb6ce1\byte-buddy-agent-1.14.19.jar)
-WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
-WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
-WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2025-11-27T22:18:39.595Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] c.c.api.ProductControllerValidationTest  : Starting ProductControllerValidationTest using Java 21.0.8 with PID 21580 (started by Admin in D:\Dz\Web_Java\Test\lab3_cosmocats)
+2025-11-27T22:18:39.595Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] c.c.api.ProductControllerValidationTest  : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2025-11-27T22:18:40.389Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2025-11-27T22:18:40.393Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2025-11-27T22:18:40.395Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2025-11-27T22:18:40.409Z  INFO 21580 --- [lab3-cosmocats-db] [    Test worker] c.c.api.ProductControllerValidationTest  : Started ProductControllerValidationTest in 0.871 seconds (process running for 25.237)
 </pre>
 </span>
 </div>
@@ -139,7 +126,7 @@ WARNING: Dynamic loading of agents will be disallowed by default in a future rel
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.10.1</a> at 30 жовт. 2025 р., 23:04:47</p>
+<a href="http://www.gradle.org">Gradle 8.10.1</a> at 28 лист. 2025 р., 00:19:04</p>
 </div>
 </div>
 </body>
