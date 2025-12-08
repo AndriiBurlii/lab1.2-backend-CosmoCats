@@ -19,11 +19,13 @@ public class FeatureToggleAspect {
     }
 
     @Around("@annotation(flag)")
-    public Object aroundFeatureMethod(ProceedingJoinPoint pjp, FeatureFlag flag) throws Throwable {
-        String name = flag.value();
-        boolean on = toggles.isEnabled(name);
-        log.info("Feature '{}' enabled={}", name, on);
-        if (on) return pjp.proceed();
-        throw new FeatureNotAvailableException("Feature '" + name + "' is disabled");
+public Object aroundFeatureMethod(ProceedingJoinPoint pjp, FeatureFlag flag) throws Throwable {
+    String name = flag.value();
+    boolean on = toggles.isEnabled(name);
+    log.info("Feature '{}' enabled={}", name, on);
+    if (on) {
+        return pjp.proceed();
     }
+    // тепер exception сам формує текст
+    throw new FeatureNotAvailableException(name);
 }
