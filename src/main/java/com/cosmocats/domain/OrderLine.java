@@ -1,7 +1,6 @@
 package com.cosmocats.domain;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 public class OrderLine {
 
@@ -75,20 +74,5 @@ public class OrderLine {
 
     public void setPriceAtPurchase(BigDecimal priceAtPurchase) {
         this.priceAtPurchase = priceAtPurchase;
-    }
-
-    // equals / hashCode тільки по id
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof OrderLine)) return false;
-        OrderLine that = (OrderLine) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }
