@@ -36,11 +36,11 @@ public class Order {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
-    @OneToMany(
-            mappedBy = "order",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    /**
+     * Доменний список ліній замовлення.
+     * JPA його НЕ чіпає (поле @Transient), зв’язок у базі тримає OrderLineEntity.
+     */
+    @Transient
     private List<OrderLine> lines = new ArrayList<>();
 
     public Order() {
@@ -112,7 +112,7 @@ public class Order {
         if (line == null) {
             return;
         }
-        // щоб не дублювати
+        // щоб не дублювати посилання на той самий об'єкт
         if (!this.lines.contains(line)) {
             this.lines.add(line);
         }
