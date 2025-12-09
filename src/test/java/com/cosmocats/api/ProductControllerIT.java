@@ -13,62 +13,95 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 
 @SpringBootTest(classes = {CosmoCatsApplication.class, PostgresTestConfig.class})
 @AutoConfigureMockMvc
 class ProductControllerIT {
 
+    @Autowired
+    private MockMvc mvc;
 
     @Autowired
-    MockMvc mvc;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    ObjectMapper mapper;
+    private String createProduct(String name, BigDecimal price) throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName(name);
+        request.setPrice(price);
+        request.setCategory("GADGETS");
 
-    @Test
-    void fullCrudFlow_ok() throws Exception {
-        // create
-        ProductRequest req = new ProductRequest();
-        req.setName("Phone");
-        req.setPrice(new BigDecimal("123.45"));
-        req.setCategory("tech");
-
-        String body = mapper.writeValueAsString(req);
-
-        String location = mvc.perform(post("/api/v1/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-            .andExpect(status().isCreated())
-            .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/v1/products/")))
-            .andReturn().getResponse().getHeader("Location");
-
-        // list
-        mvc.perform(get("/api/v1/products"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].name").value("Phone"));
-
-        // update
-        req.setName("Phone X");
-        mvc.perform(put(location.replaceFirst(".*/api/v1/products/", "/api/v1/products/"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("Phone X"));
-
-        // delete
-        mvc.perform(delete(location.replaceFirst(".*/api/v1/products/", "/api/v1/products/")))
-            .andExpect(status().isNoContent());
+        return mvc.perform(post("/api/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString("/api/v1/products/")))
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
     }
 
     @Test
-    void create_invalid_returns400() throws Exception {
-        ProductRequest bad = new ProductRequest(); // empty -> violates @Valid
+    void create_ok() throws Exception {
+        createProduct("Phone-Create", BigDecimal.valueOf(100));
+    }
+
+    @Test
+    void get_ok() throws Exception {
+        String name = "Phone-Get";
+        BigDecimal price = BigDecimal.valueOf(200);
+
+        String location = createProduct(name, price);
+
+        mvc.perform(get(location))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(name))
+                .andExpect(jsonPath("$.price").value(price.intValue()));
+    }
+
+    @Test
+    void update_ok() throws Exception {
+        String originalName = "Phone-Update";
+        BigDecimal originalPrice = BigDecimal.valueOf(300);
+
+        String location = createProduct(originalName, originalPrice);
+
+        ProductRequest updateRequest = new ProductRequest();
+        updateRequest.setName("Phone-Update-Updated");
+        updateRequest.setPrice(BigDecimal.valueOf(350));
+        updateRequest.setCategory("GADGETS");
+
+        mvc.perform(put(location)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Phone-Update-Updated"))
+                .andExpect(jsonPath("$.price").value(350));
+    }
+
+    @Test
+    void delete_ok() throws Exception {
+        String location = createProduct("Phone-Delete", BigDecimal.valueOf(400));
+
+        mvc.perform(delete(location))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void create_invalid_returnsBadRequest() throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName(""); // невалідне ім'я
+        request.setPrice(BigDecimal.valueOf(-1)); // невалідна ціна
+        request.setCategory("GADGETS");
+
         mvc.perform(post("/api/v1/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(bad)))
-            .andExpect(status().isBadRequest());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }
