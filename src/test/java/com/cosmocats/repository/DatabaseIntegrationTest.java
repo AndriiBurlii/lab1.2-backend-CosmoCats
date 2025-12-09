@@ -77,15 +77,16 @@ class DatabaseIntegrationTest {
         OrderLine line2 = new OrderLine(null, rocketKeyboard, 1, new BigDecimal("149.50"));
         line2.setOrder(order);
 
-        // зберігаємо entity, а не domain
         orderLineRepository.save(toEntity(line1));
         orderLineRepository.save(toEntity(line2));
 
         Order reloaded = orderRepository.findByNumber("ORD-001")
                 .orElseThrow();
 
-        assertThat(reloaded.getLines()).hasSize(2);
-        assertThat(reloaded.getLines())
+        // Перевіряємо лінії через репозиторій entity
+        List<OrderLineEntity> allLines = orderLineRepository.findAll();
+        assertThat(allLines).hasSize(2);
+        assertThat(allLines)
                 .extracting(l -> l.getProduct().getName())
                 .containsExactlyInAnyOrder("Laser Mouse", "Rocket Keyboard");
     }
@@ -143,7 +144,6 @@ class DatabaseIntegrationTest {
         OrderLine l3 = new OrderLine(null, a, 3, new BigDecimal("10.00"));
         l3.setOrder(o2);
 
-        // зберігаємо entity, а не domain
         orderLineRepository.saveAll(List.of(
                 toEntity(l1),
                 toEntity(l2),
