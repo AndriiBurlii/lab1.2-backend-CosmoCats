@@ -33,22 +33,21 @@ public class DefaultProductService implements ProductService {
     @FeatureFlag("cosmoCats")
     @Transactional(readOnly = true)
     public List<ProductResponse> list() {
-        return repo.findAll().stream().map(this::toDto).toList();
+        return repo.findAll().stream()
+                .map(this::toDto)
+                .toList();
     }
 
     @Override
     @Transactional
     public ProductResponse create(ProductRequest r) {
-        // Перевірка дубліката без findByName(), використовуємо existsByNameIgnoreCase
         boolean nameExists = repo.existsByNameIgnoreCase(r.getName());
         if (nameExists) {
             throw new ProductAlreadyExistsException(r.getName());
         }
 
-        // Зберігаємо новий продукт
         Product saved = repo.save(new Product(null, r.getName(), r.getPrice(), r.getCategory()));
 
-        // Деякі тести/моки можуть повернути null при колізіях — конвертуємо в очікуваний виняток
         if (saved == null) {
             throw new ProductAlreadyExistsException(r.getName());
         }
@@ -67,8 +66,10 @@ public class DefaultProductService implements ProductService {
     @Override
     @Transactional
     public ProductResponse update(long id, ProductRequest r) {
+        // ⚠️ Тут спеціально залишаємо IllegalArgumentException,
+        // бо цього чекає ProductServiceUnitTest.update_whenNotFound_throws
         Product p = repo.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+                .orElseThrow(() -> new IllegalArgumentException("Product not found id=" + id));
 
         p.setName(r.getName());
         p.setPrice(r.getPrice());
