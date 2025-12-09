@@ -6,6 +6,7 @@ import com.cosmocats.domain.Category;
 import com.cosmocats.domain.Order;
 import com.cosmocats.domain.OrderLine;
 import com.cosmocats.domain.Product;
+import com.cosmocats.entity.OrderLineEntity;
 import com.cosmocats.repository.projection.ProductSalesProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
-import com.cosmocats.entity.OrderLineEntity;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -77,8 +77,9 @@ class DatabaseIntegrationTest {
         OrderLine line2 = new OrderLine(null, rocketKeyboard, 1, new BigDecimal("149.50"));
         line2.setOrder(order);
 
-        orderLineRepository.save(line1);
-        orderLineRepository.save(line2);
+        // зберігаємо entity, а не domain
+        orderLineRepository.save(toEntity(line1));
+        orderLineRepository.save(toEntity(line2));
 
         Order reloaded = orderRepository.findByNumber("ORD-001")
                 .orElseThrow();
@@ -142,7 +143,12 @@ class DatabaseIntegrationTest {
         OrderLine l3 = new OrderLine(null, a, 3, new BigDecimal("10.00"));
         l3.setOrder(o2);
 
-        orderLineRepository.saveAll(List.of(l1, l2, l3));
+        // зберігаємо entity, а не domain
+        orderLineRepository.saveAll(List.of(
+                toEntity(l1),
+                toEntity(l2),
+                toEntity(l3)
+        ));
 
         Page<ProductSalesProjection> page = productRepository.findTopSellingProducts(
                 PageRequest.of(0, 10)
@@ -156,5 +162,17 @@ class DatabaseIntegrationTest {
         assertThat(projections.get(0).totalQuantity()).isEqualTo(8L);
         assertThat(projections.get(1).productName()).isEqualTo("B");
         assertThat(projections.get(1).totalQuantity()).isEqualTo(2L);
+    }
+
+    // --- простий маппер з domain OrderLine в JPA OrderLineEntity ---
+
+    private OrderLineEntity toEntity(OrderLine line) {
+        OrderLineEntity entity = new OrderLineEntity();
+        entity.setId(line.getId());
+        entity.setOrder(line.getOrder());
+        entity.setProduct(line.getProduct());
+        entity.setQty(line.getQty());
+        entity.setPriceAtPurchase(line.getPriceAtPurchase());
+        return entity;
     }
 }
