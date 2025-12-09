@@ -1,4 +1,3 @@
-
 package com.cosmocats.service;
 
 import com.cosmocats.api.dto.ProductRequest;
@@ -30,6 +29,7 @@ class DefaultProductServiceTest {
     @Test
     void create_ok() {
         ProductRequest req = new ProductRequest("Laser Mouse", new BigDecimal("99.99"), "gadgets");
+
         when(repository.existsByNameIgnoreCase("Laser Mouse")).thenReturn(false);
         when(repository.save(any())).thenAnswer(inv -> {
             Product p = inv.getArgument(0);
@@ -51,7 +51,9 @@ class DefaultProductServiceTest {
         when(repository.existsByNameIgnoreCase("X")).thenReturn(true);
         ProductRequest req = new ProductRequest("X", new BigDecimal("1.00"), "c");
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.create(req));
+        ProductAlreadyExistsException ex =
+                assertThrows(ProductAlreadyExistsException.class, () -> service.create(req));
+
         assertTrue(ex.getMessage().toLowerCase().contains("already exists"));
     }
 
@@ -67,7 +69,8 @@ class DefaultProductServiceTest {
     @Test
     void get_notFound() {
         when(repository.findById(8L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> service.get(8L));
+
+        assertThrows(ProductNotFoundException.class, () -> service.get(8L));
     }
 
     @Test
@@ -76,6 +79,7 @@ class DefaultProductServiceTest {
                 new Product(1L, "A", new BigDecimal("1.00"), "c"),
                 new Product(2L, "B", new BigDecimal("2.00"), "c")
         ));
+
         List<ProductResponse> all = service.list();
         assertEquals(2, all.size());
     }
@@ -96,13 +100,16 @@ class DefaultProductServiceTest {
     @Test
     void delete_ok() {
         when(repository.existsById(9L)).thenReturn(true);
+
         service.delete(9L);
+
         verify(repository).deleteById(9L);
     }
 
     @Test
     void delete_notFound() {
         when(repository.existsById(10L)).thenReturn(false);
-        assertThrows(IllegalArgumentException.class, () -> service.delete(10L));
+
+        assertThrows(ProductNotFoundException.class, () -> service.delete(10L));
     }
 }
