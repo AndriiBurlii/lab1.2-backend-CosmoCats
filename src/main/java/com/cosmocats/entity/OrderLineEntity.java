@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
-@Entity
+@Entity(name = "OrderLine")
 @Table(
         name = "order_lines",
         uniqueConstraints = @UniqueConstraint(
@@ -90,3 +90,4 @@ public class OrderLineEntity {
         this.priceAtPurchase = priceAtPurchase;
     }
 }
+
