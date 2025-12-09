@@ -39,19 +39,18 @@ public class DefaultProductService implements ProductService {
     @Override
     @Transactional
     public ProductResponse create(ProductRequest r) {
-        // Перевірка дубліката без findByName()
-        boolean nameExists = repo.findAll().stream()
-                .anyMatch(p -> p.getName() != null && p.getName().equalsIgnoreCase(r.getName()));
+        // Перевірка дубліката без findByName(), використовуємо existsByNameIgnoreCase
+        boolean nameExists = repo.existsByNameIgnoreCase(r.getName());
         if (nameExists) {
-            throw new IllegalArgumentException("Product with name '" + r.getName() + "' already exists");
+            throw new ProductAlreadyExistsException(r.getName());
         }
 
         // Зберігаємо новий продукт
         Product saved = repo.save(new Product(null, r.getName(), r.getPrice(), r.getCategory()));
 
-        // Деякі тести/моки можуть повернути null при колізіях — конвертуємо в очікуваний IllegalArgumentException
+        // Деякі тести/моки можуть повернути null при колізіях — конвертуємо в очікуваний виняток
         if (saved == null) {
-            throw new IllegalArgumentException("Product with name '" + r.getName() + "' already exists");
+            throw new ProductAlreadyExistsException(r.getName());
         }
 
         return toDto(saved);
@@ -61,7 +60,7 @@ public class DefaultProductService implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse get(long id) {
         Product p = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(id));
         return toDto(p);
     }
 
@@ -69,10 +68,12 @@ public class DefaultProductService implements ProductService {
     @Transactional
     public ProductResponse update(long id, ProductRequest r) {
         Product p = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
         p.setName(r.getName());
         p.setPrice(r.getPrice());
         p.setCategory(r.getCategory());
+
         return toDto(repo.save(p));
     }
 
@@ -80,7 +81,7 @@ public class DefaultProductService implements ProductService {
     @Transactional
     public void delete(long id) {
         if (!repo.existsById(id)) {
-            throw new IllegalArgumentException("Product not found");
+            throw new ProductNotFoundException(id);
         }
         repo.deleteById(id);
     }
