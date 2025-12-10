@@ -1,68 +1,50 @@
 package org.example.cosmocats.config;
 
-import org.example.cosmocats.security.CosmoCatsTokenAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.http.HttpStatus;
 
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
-    private final CosmoCatsTokenAuthenticationFilter tokenFilter;
-
-    public SecurityConfig(CosmoCatsTokenAuthenticationFilter tokenFilter) {
-        this.tokenFilter = tokenFilter;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // без state, бо токени
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                // REST API => без сесій та форм
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // csrf можна відрубити для REST
-                .csrf(AbstractHttpConfigurer::disable)
-
-                // хто куди має доступ
+                // AUTH RULES
                 .authorizeHttpRequests(auth -> auth
-                        // повністю відкриті технічні ендпоінти
+                        // swagger / docs
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/actuator/health"
+                                "/swagger-ui.html"
                         ).permitAll()
 
-                        // приклад: публічний перегляд товарів/категорій
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/categories/**",
-                                "/api/products/**"
-                        ).permitAll()
+                        // ендпоїнти реєстрації/логіну, якщо є
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 
-                        // все інше вимагає авторизації з Bearer токеном
+                        // публічні речі, якщо є (категорії / продукти тільки на GET)
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+
+                        // наприклад, адмініка
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // усе інше – тільки аутентифіковані
                         .anyRequest().authenticated()
                 )
 
-                // ставимо наш Bearer-фільтр перед стандартним
-                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // 401 для неавторизованих
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                );
+                // OAuth2 Resource Server з Bearer Token (JWT)
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
