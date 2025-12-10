@@ -48,7 +48,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private void handleApiKeyAuth(String apiKey) {
         if (!properties.getValidKey().equals(apiKey)) {
-            log.warn("Invalid API key: {}", apiKey);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Invalid API key\"}");
             return;
         }
 
