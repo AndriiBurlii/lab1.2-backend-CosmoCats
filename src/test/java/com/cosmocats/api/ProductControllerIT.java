@@ -104,4 +104,42 @@ class ProductControllerIT {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void get_nonExistingProduct_returnsNotFound() throws Exception {
+        mvc.perform(get("/api/v1/products/{id}", 999_999L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void delete_nonExistingProduct_returnsNotFound() throws Exception {
+        mvc.perform(delete("/api/v1/products/{id}", 999_999L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void update_nonExistingProduct_returnsNotFound() throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName("Does-not-matter");
+        request.setPrice(BigDecimal.TEN);
+        request.setCategory("GADGETS");
+
+        mvc.perform(put("/api/v1/products/{id}", 999_999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void update_invalid_returnsBadRequest() throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName(""); // невалідне ім'я
+        request.setPrice(BigDecimal.valueOf(-5)); // невалідна ціна
+        request.setCategory("GADGETS");
+
+        mvc.perform(put("/api/v1/products/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 }
