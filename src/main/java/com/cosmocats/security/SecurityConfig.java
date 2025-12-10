@@ -41,11 +41,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Поки що — всі запити вимагають аутентифікації
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated()
                 )
-                // OAuth2 Resource Server з JWT
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(bearerTokenResolver(apiKeyProperties))
                         .jwt(jwt -> jwt
@@ -53,7 +51,6 @@ public class SecurityConfig {
                                 .jwtAuthenticationConverter(jwtRoleConverter())
                         )
                 )
-                // Кастомний API key фільтр перед BearerTokenAuthenticationFilter
                 .addFilterBefore(
                         new AuthenticationFilter(apiKeyProperties),
                         BearerTokenAuthenticationFilter.class
@@ -62,25 +59,19 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Якщо є X-API-KEY — не намагаємося парсити Bearer-токен.
-     */
     @Bean
     public BearerTokenResolver bearerTokenResolver(ApiKeyProperties props) {
         DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
 
         return request -> {
+            // Якщо є X-API-KEY — не чіпаємо Bearer токен
             if (request.getHeader(props.getHeaderName()) != null) {
-                // Є API key — не чіпаємо Bearer
                 return null;
             }
             return defaultResolver.resolve(request);
         };
     }
 
-    /**
-     * JwtDecoder з симетричним секретом (HS256 і т.п.).
-     */
     @Bean
     public JwtDecoder jwtDecoder() {
         SecretKey secretKey = new SecretKeySpec(
@@ -93,9 +84,6 @@ public class SecurityConfig {
                 .build();
     }
 
-    /**
-     * Конвертація claim "roles" у GrantedAuthority з префіксом ROLE_.
-     */
     @Bean
     public JwtAuthenticationConverter jwtRoleConverter() {
         JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
