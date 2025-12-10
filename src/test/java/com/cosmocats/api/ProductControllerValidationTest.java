@@ -34,10 +34,10 @@ class ProductControllerValidationTest {
     @Test
     void create_validRequest_returns201() throws Exception {
         ProductRequest req =
-                new ProductRequest("Ship", new BigDecimal("10.00"), "space");
+                new ProductRequest("Ship", new BigDecimal("10.00"), "GADGETS");
 
         Mockito.when(productService.create(any()))
-                .thenReturn(new ProductResponse(1L, "Ship", new BigDecimal("10.00"), "space"));
+                .thenReturn(new ProductResponse(1L, "Ship", new BigDecimal("10.00"), "GADGETS"));
 
         mvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
