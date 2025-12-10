@@ -27,24 +27,23 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         String requestApiKey = request.getHeader(apiKeyProperties.getHeaderName());
 
-        // Якщо хедеру немає — просто пропускаємо далі (JWT/інші механізми)
+        // Якщо API key відсутній — не блочимо, даємо шанс JWT
         if (requestApiKey == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Якщо API key валідний — ставимо аутентифікацію в контекст
+        // Якщо API key валідний — ставимо аутентифікацію
         if (apiKeyProperties.getSecret().equals(requestApiKey)) {
-            var authentication = new UsernamePasswordAuthenticationToken(
+            var auth = new UsernamePasswordAuthenticationToken(
                     apiKeyProperties.getUsername(),
                     null,
                     Collections.singletonList(new SimpleGrantedAuthority(apiKeyProperties.getRole()))
             );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);
         } else {
-            // Якщо ключ невалідний — 401
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid API Key");
         }
