@@ -67,6 +67,22 @@ class ProductControllerValidationTest {
     }
 
     @Test
+    void update_invalidRequest_returns400() throws Exception {
+        String body = """
+                {
+                  "name": "",
+                  "price": -1,
+                  "category": ""
+                }
+                """;
+
+        mvc.perform(put("/api/v1/products/{id}", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void list_ok() throws Exception {
         Mockito.when(productService.list()).thenReturn(List.of(
                 new ProductResponse(1L, "A", new BigDecimal("1.00"), "c")
