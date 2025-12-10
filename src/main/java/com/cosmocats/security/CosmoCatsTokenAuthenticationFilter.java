@@ -1,4 +1,5 @@
-package org.example.cosmocats.security;
+package com.cosmocats.security;
+
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
