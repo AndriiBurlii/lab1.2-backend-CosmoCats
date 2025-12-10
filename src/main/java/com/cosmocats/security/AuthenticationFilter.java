@@ -6,21 +6,20 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
-@Slf4j
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-    private final ApiKeyProperties properties;
+    private final ApiKeyProperties apiKeyProperties;
 
     @Override
     protected void doFilterInternal(
@@ -29,66 +28,34 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String apiKey = request.getHeader(properties.getHeaderName());
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        // 1. Дістаємо API key із заголовка
+        String apiKey = request.getHeader(apiKeyProperties.getHeaderName());
 
-        if (apiKey == null && authHeader == null) {
+        // 2. Якщо заголовка немає — просто йдемо далі (може прийде Bearer JWT)
+        if (apiKey == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (apiKey != null) {
-            handleApiKeyAuth(apiKey);
-        } else if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            handleBearerToken(authHeader.substring(7));
-        }
-
-        filterChain.doFilter(request, response);
-    }
-
-    private void handleApiKeyAuth(String apiKey) {
-        if (!properties.getValidKey().equals(apiKey)) {
+        // 3. Якщо API key не співпав із secret → 401
+        if (!apiKeyProperties.getSecret().equals(apiKey)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("{\"error\":\"Invalid API key\"}");
             return;
         }
 
-        AbstractAuthenticationToken auth = new AbstractAuthenticationToken(
-                List.of(new SimpleGrantedAuthority("ROLE_API_USER"))
-        ) {
-            @Override
-            public Object getCredentials() {
-                return apiKey;
-            }
+        // 4. Якщо все ок — створюємо Authentication і кладемо в контекст
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        apiKeyProperties.getUsername(),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + apiKeyProperties.getRole()))
+                );
 
-            @Override
-            public Object getPrincipal() {
-                return "api-key-user";
-            }
-        };
-
-        auth.setAuthenticated(true);
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(auth);
-    }
 
-    private void handleBearerToken(String token) {
-        // тут можна щось робити з JWT, але для спрощення зробимо мок
-        AbstractAuthenticationToken auth = new AbstractAuthenticationToken(
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        ) {
-            @Override
-            public Object getCredentials() {
-                return token;
-            }
-
-            @Override
-            public Object getPrincipal() {
-                return "jwt-user";
-            }
-        };
-
-        auth.setAuthenticated(true);
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        filterChain.doFilter(request, response);
     }
 }
