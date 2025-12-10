@@ -34,3 +34,13 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
+app:
+  security:
+    api-key:
+      header-name: X-API-KEY
+      secret: cosmo-secret-key-123
+      role: ROLE_ADMIN
+    jwt:
+      secret: my-very-secret-key-for-tests-only-must-be-long-enough
+      algorithm: HS256
+
