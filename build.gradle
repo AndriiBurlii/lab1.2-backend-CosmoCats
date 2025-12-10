@@ -40,6 +40,16 @@ dependencies {
 
     // ✅ WireMock standalone — містить усе необхідне (Jetty, Servlet, Jackson)
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.0'
+        // Lombok (для @Data, @RequiredArgsConstructor і т.д.)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Security + OAuth2 Resource Server (Bearer JWT)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
 }
 
 // --- Jacoco загальні налаштування ---
