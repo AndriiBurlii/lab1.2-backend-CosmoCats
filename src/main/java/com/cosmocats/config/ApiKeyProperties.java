@@ -4,28 +4,28 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-@Data
 @Configuration
-@ConfigurationProperties(prefix = "app.security.api-key")
+@ConfigurationProperties(prefix = "security.api-key")
+@Data
 public class ApiKeyProperties {
 
     /**
-     * Сам секретний ключ, який ти будеш передавати в хедері.
+     * Імʼя заголовка, з якого читаємо API key (X-API-KEY)
+     */
+    private String headerName;
+
+    /**
+     * Сам "секрет" / валідний API key
      */
     private String secret;
 
     /**
-     * Назва хедера, з якого беремо API key.
+     * Імʼя користувача, під яким аутентифікуємо запит з валідним API key
      */
-    private String headerName = "X-API-KEY";
+    private String username;
 
     /**
-     * Ім'я користувача, під яким аутентифікуємося через API key.
+     * Роль, яку видаємо (наприклад, ADMIN або USER)
      */
-    private String username = "API-KEY-USER";
-
-    /**
-     * Роль, яку отримає користувач з валідним API key.
-     */
-    private String role = "ROLE_API";
+    private String role;
 }
