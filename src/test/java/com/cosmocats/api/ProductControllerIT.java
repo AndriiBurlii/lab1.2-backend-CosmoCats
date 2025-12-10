@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes = {CosmoCatsApplication.class, PostgresTestConfig.class})
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class ProductControllerIT {
 
     @Autowired
@@ -95,8 +95,8 @@ class ProductControllerIT {
     @Test
     void create_invalid_returnsBadRequest() throws Exception {
         ProductRequest request = new ProductRequest();
-        request.setName(""); // невалідне ім'я
-        request.setPrice(BigDecimal.valueOf(-1)); // невалідна ціна
+        request.setName("");
+        request.setPrice(BigDecimal.valueOf(-1));
         request.setCategory("GADGETS");
 
         mvc.perform(post("/api/v1/products")
