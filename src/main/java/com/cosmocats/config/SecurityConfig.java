@@ -1,4 +1,4 @@
-package org.example.cosmocats.config;
+package com.cosmocats.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
