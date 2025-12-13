@@ -34,7 +34,7 @@ class AuthenticationTest {
                 .andExpect(status().isOk());
     }
 
-    // 3. Тест: З валідним API Key має бути 200 (Твій Варіант 1)
+    // 3. Тест: З валідним API Key має бути 200
     @Test
     void shouldReturn200_WhenValidApiKeyProvided() throws Exception {
         String validKey = "cosmo-secret-key-123";

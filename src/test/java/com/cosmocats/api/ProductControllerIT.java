@@ -120,7 +120,6 @@ class ProductControllerIT {
     @Test
     @WithMockUser(roles = "USER")
     void delete_asUser_returnsForbidden() throws Exception {
-        // Юзер не може видалити навіть неіснуючий продукт (бо фільтр спрацьовує раніше)
         mvc.perform(delete("/api/v1/products/{id}", 999))
                 .andExpect(status().isForbidden());
     }

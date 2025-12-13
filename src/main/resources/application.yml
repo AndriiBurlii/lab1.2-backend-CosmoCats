@@ -44,7 +44,7 @@ app:
       header-name: X-API-KEY
       secret: cosmo-secret-key-123
       username: andrii
-      role: ROLE_ADMIN
+      role: ADMIN
     jwt:
       jwk-set-uri: http://localhost:8081/.well-known/jwks.json
 
