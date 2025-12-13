@@ -10,12 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class JwtProperties {
 
     /**
-     * Секрет для підпису JWT (має бути довгий рядок).
+     * URL, де лежать публічні ключі (JWKS).
      */
-    private String secret;
-
-    /**
-     * Алгоритм, наприклад HS256.
-     */
-    private String algorithm;
+    private String jwkSetUri;
 }

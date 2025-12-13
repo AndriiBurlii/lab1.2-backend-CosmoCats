@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cosmocats.wiremock.ExternalRateClientWireMockTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-11-27T22:19:01" hostname="DESKTOP-H6EG9BA" time="1.253">
-  <properties/>
-  <testcase name="wiremock_stubbing_ok()" classname="com.cosmocats.wiremock.ExternalRateClientWireMockTest" time="1.253"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

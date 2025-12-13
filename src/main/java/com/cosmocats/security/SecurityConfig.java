@@ -2,6 +2,7 @@ package com.cosmocats.security;
 
 import com.cosmocats.config.ApiKeyProperties;
 import com.cosmocats.config.JwtProperties;
+import com.cosmocats.config.JwtAuthConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,19 +12,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -32,66 +25,42 @@ import java.nio.charset.StandardCharsets;
 @Profile("!no-auth")
 public class SecurityConfig {
 
-    private final JwtProperties jwtProperties;
     private final ApiKeyProperties apiKeyProperties;
+    private final JwtProperties jwtProperties;
+    private final JwtAuthConverter jwtAuthConverter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .bearerTokenResolver(bearerTokenResolver(apiKeyProperties))
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder())
-                                .jwtAuthenticationConverter(jwtRoleConverter())
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()) // Використовуємо метод нижче
                         )
                 )
                 .addFilterBefore(
                         new AuthenticationFilter(apiKeyProperties),
-                        BearerTokenAuthenticationFilter.class
+                        UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
     }
 
     @Bean
-    public BearerTokenResolver bearerTokenResolver(ApiKeyProperties props) {
-        DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
-
-        return request -> {
-            // Якщо є X-API-KEY — не чіпаємо Bearer токен
-            if (request.getHeader(props.getHeaderName()) != null) {
-                return null;
-            }
-            return defaultResolver.resolve(request);
-        };
-    }
-
-    @Bean
     public JwtDecoder jwtDecoder() {
-        SecretKey secretKey = new SecretKeySpec(
-                jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8),
-                jwtProperties.getAlgorithm()
-        );
-
-        return NimbusJwtDecoder.withSecretKey(secretKey)
-                .macAlgorithm(MacAlgorithm.valueOf(jwtProperties.getAlgorithm()))
-                .build();
+        return NimbusJwtDecoder.withJwkSetUri(jwtProperties.getJwkSetUri()).build();
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtRoleConverter() {
-        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthoritiesClaimName("roles");
-        converter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(converter);
-        return jwtConverter;
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwtAuthConverter);
+        return converter;
     }
 }

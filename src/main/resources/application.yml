@@ -5,8 +5,10 @@ spring:
   application:
     name: lab3-cosmocats-db
 
+  # --- БАЗОВІ НАЛАШТУВАННЯ (PROD / DEFAULT) ---
+  # Тут PostgreSQL, Liquibase і все серйозне
   datasource:
-    url: jdbc:postgresql://localhost:5432/cosmocats
+    url: jdbc:postgresql://localhost:5433/cosmocats
     username: cosmo
     password: cosmo
     driver-class-name: org.postgresql.Driver
@@ -22,25 +24,56 @@ spring:
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
+    enabled: true
 
 feature:
   cosmoCats:
-    enabled: true      # ⬅ ВАЖЛИВО! Вмикає фічу
+    enabled: true
   kittyProducts:
-    enabled: false     # можна лишити як є
+    enabled: false
 
 logging:
   level:
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
+
 app:
   security:
     api-key:
       header-name: X-API-KEY
       secret: cosmo-secret-key-123
+      username: andrii
       role: ROLE_ADMIN
     jwt:
-      secret: my-very-secret-key-for-tests-only-must-be-long-enough
-      algorithm: HS256
+      jwk-set-uri: http://localhost:8081/.well-known/jwks.json
 
+---
+# --- ПРОФІЛЬ DEV (H2) ---
+# Активується, якщо запустити з профілем 'dev'
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:h2:mem:cats;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yml
+
+  h2:
+    console:
+      enabled: true

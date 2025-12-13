@@ -37,10 +37,8 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.security:spring-security-test'
 
-    // ✅ WireMock standalone — містить усе необхідне (Jetty, Servlet, Jackson)
-    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.0'
-        // Lombok (для @Data, @RequiredArgsConstructor і т.д.)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
@@ -49,6 +47,8 @@ dependencies {
     // Spring Security + OAuth2 Resource Server (Bearer JWT)
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    testImplementation 'org.wiremock:wiremock-standalone:3.3.1'
+    testImplementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
 
 }
 
