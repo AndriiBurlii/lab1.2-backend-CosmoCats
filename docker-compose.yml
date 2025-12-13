@@ -1,16 +1,21 @@
 services:
-  db:
-    image: postgres:16
-    container_name: lab3-cosmocats-db
+  # Емулятор сервера авторизації
+  auth-mock:
+    image: wiremock/wiremock:latest
+    container_name: cosmo-auth-mock
+    ports:
+      - "8081:8080" # На хості буде 8081, всередині контейнера 8080
+    volumes:
+      - ./wiremock:/home/wiremock
+    command: --verbose --global-response-templating
+
+  # База даних
+  postgres:
+    image: postgres:15-alpine
+    container_name: cosmo-postgres
+    ports:
+      - "5433:5432"
     environment:
       POSTGRES_DB: cosmocats
       POSTGRES_USER: cosmo
       POSTGRES_PASSWORD: cosmo
-      TZ: UTC
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cosmo -d cosmocats || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10

@@ -1,56 +1,45 @@
+# Lab 4 — CosmoCats Security
 
-# Lab 3 — CosmoCats Products API
-
-Лабораторна робота №3 з курсу **Web-Java (Spring Boot)**  
-**Тема:** REST-API для каталогу товарів з використанням **PostgreSQL**, **Liquibase**, **Docker** та **feature-toggle**.
+Лабораторна робота №4 з курсу **Web-Java (Spring Boot)**
+**Тема:** Захист REST-API за допомогою **Spring Security**. Реалізація **OAuth2 Resource Server** (JWT), **API Key Authentication**, **Method Level Security** та тестування безпеки за допомогою **WireMock**.
 
 ---
 
 ## Студент
 
-- **ПІБ:** Бурлій Андрій Євгенійович  
-- **Група:** ІО-32  
-- **Репозиторій:** `lab1.2-backend-CosmoCats`, гілка `lab3`
+- **ПІБ:** Бурлій Андрій Євгенійович
+- **Група:** ІО-32
+- **Репозиторій:** `lab1.2-backend-CosmoCats`, гілка `lab4`
 
 ---
 
 ## Що реалізовано в цій роботі
 
-1. **REST-API для продуктів CosmoCats**
-   - `GET /api/v1/products` — отримати список продуктів.
-   - `GET /api/v1/products/{id}` — отримати продукт за ID.
-   - `POST /api/v1/products` — створити продукт.
-   - `PUT /api/v1/products/{id}` — оновити продукт.
-   - `DELETE /api/v1/products/{id}` — видалити продукт.
+1. **Spring Security Configuration**
+    - Налаштовано `SecurityFilterChain` для захисту ендпоінтів.
+    - Підключено **OAuth2 Resource Server** для валідації JWT токенів (Bearer Auth).
+    - Токени перевіряються через JWK Set URI (використовується **WireMock** для емуляції Auth Server).
 
-2. **Збереження даних у PostgreSQL**
-   - Конфігурація через `application.yml`.
-   - Підключення до контейнера `postgres` з Docker Compose.
-   - JPA / Hibernate для роботи з ентіті.
+2. **Гібридна аутентифікація**
+    - **Варіант 1: JWT (OAuth2).** Стандартний підхід. Підтримка ролей через кастомний `JwtAuthConverter` (парсинг `realm_access.roles` з Keycloak-style токенів).
+    - **Варіант 2: API Key.** Реалізовано кастомний фільтр `AuthenticationFilter`, який перевіряє заголовок `X-API-KEY` для machine-to-machine комунікації.
 
-3. **Міграції схеми через Liquibase**
-   - `db/changelog/db.changelog-master.yml` — головний changelog.
-   - `0001-initial-schema.yml` — створення таблиць `categories`, `products`, `orders`, `order_lines` та послідовностей.
-   - `0002-make-category-id-nullable.yml` — послаблення NOT NULL для `products.category_id`.
+3. **Method Level Security (@PreAuthorize)**
+    - Розмежування прав доступу на рівні методів контролера:
+        - `GET /products` — доступно всім авторизованим користувачам (`USER`, `ADMIN`).
+        - `POST`, `PUT`, `DELETE` — доступно тільки користувачам з роллю `ADMIN`.
+    - При спробі доступу без прав повертається **403 Forbidden**.
 
-4. **Feature-toggle `cosmoCats`**
-   - Фічу контролює властивість  
-     `features.cosmoCats.enabled`.
-   - Якщо значення `false` → усі запити до `/api/v1/products/**` повертають **403 Forbidden** з повідомленням  
-     _"Feature 'cosmoCats' is disabled"_.
-   - У звичайному профілі (development) фіча **увімкнена**.
+4. **No-Auth Profile**
+    - Реалізовано профіль `no-auth` для локальної розробки.
+    - При запуску з цим профілем Security вимикається, і всі ендпоінти доступні анонімно.
 
-5. **Обробка помилок**
-   - Валідація вхідних даних.
-   - 400 Bad Request — наприклад, якщо продукт з таким ім’ям вже існує.
-   - 404 Not Found — продукт не знайдено.
-   - 500 Internal Server Error — неочікувана помилка.
-   - Відповіді у форматі `ProblemDetail`.
-
-6. **Тестування**
-   - Unit/Integration тести для сервісу та контролера.
-   - Testcontainers + PostgreSQL для інтеграційних тестів.
-   - Jacoco звіт по покриттю.
+5. **Infrastructure & Testing**
+    - **WireMock:** У Docker Compose додано контейнер WireMock (порт `8081`), який віддає публічні ключі (JWKS) для валідації підпису токенів.
+    - **PostgreSQL:** Порт бази даних змінено на `5433` (зовнішній), щоб уникнути конфліктів з локальним Postgres.
+    - **Integration Tests:**
+        - Тести з `@WithMockUser` для перевірки логіки контролера.
+        - Тести з генерацією реальних підписаних JWT (RSA) та перевіркою через WireMock.
 
 ---
 
@@ -58,155 +47,99 @@
 
 - **Java 21**
 - **Spring Boot 3.3.5**
-  - spring-boot-starter-web  
-  - spring-boot-starter-validation  
-  - spring-boot-starter-data-jpa  
-  - spring-boot-starter-aop
-- **PostgreSQL + Testcontainers**
+    - `spring-boot-starter-security`
+    - `spring-boot-starter-oauth2-resource-server`
+    - `spring-boot-starter-web`
+    - `spring-boot-starter-data-jpa`
+- **PostgreSQL** (Docker)
 - **Liquibase**
+- **WireMock** (Mock Auth Server)
 - **Docker / Docker Compose**
-- **Jacoco** (coverage)
-- **WireMock** (для тестів зовнішніх викликів)
-- **Gradle** (через `gradlew`)
+- **Junit 5 / MockMvc**
 
 ---
 
 ## Як запустити аплікацію локально
 
-### 1. Попередні вимоги
+### 1. Підняти інфраструктуру (Postgres + WireMock)
 
-- Встановлено:
-  - **JDK 21**
-  - **Docker Desktop** (або Docker Engine + Docker Compose)
-  - Git (для клонування репозиторію)
-
-### 2. Клонувати репозиторій та перейти в гілку
-
-```bash
-git clone https://github.com/AndriiBurlii/lab1.2-backend-CosmoCats.git
-cd lab1.2-backend-CosmoCats
-git checkout lab3
-```
-
-### 3. Підняти базу даних PostgreSQL через Docker
-
-У корені проєкту (де лежить `docker-compose.yml`):
+У корені проєкту:
 
 ```bash
 docker compose up -d
 ```
 
-Це створить контейнер, наприклад:
+Це запустить:
+- **PostgreSQL:** порт `5433` (юзер/пароль: `cosmo/cosmo`).
+- **WireMock:** порт `8081` (емулює сервер авторизації, віддає JWKS ключі).
 
-- **сервіс:** `lab3-cosmocats-db`
-- **port:** `5432`
-- **База:** `cosmocats`
-- **User / password:** `cosmo / cosmo`
+> **Важливо:** Перед запуском переконайтеся, що порти 5433 та 8081 вільні.
 
-### 4. Запустити Spring Boot застосунок
+### 2. Запустити Spring Boot застосунок
+
+Стандартний запуск (з увімкненим Security):
 
 ```bash
 ./gradlew bootRun
 ```
 
-Після старту аплікація буде слухати:
-
-- `http://localhost:8080`
-
----
-
-## Перевірка API через Postman
-
-У репозиторії є готова Postman-колекція:
-
-- `cosmocats-lab3.postman_collection.json`
-
-### Імпорт колекції
-
-1. Відкрити Postman.
-2. Натиснути **Import** → обрати файл `cosmocats-lab3.postman_collection.json`.
-3. Запустити запити з колекції **CosmoCats Lab3 – Products**.
-
-### Основні приклади запитів
-
-#### Створити продукт
-
-`POST /api/v1/products`  
-Body → `raw` → `JSON`:
-
-```json
-{
-  "name": "Space Milk",
-  "price": 12.50,
-  "category": "DAIRY"
-}
+Запуск без безпеки (Dev mode):
+```bash
+./gradlew bootRun --args='--spring.profiles.active=dev,no-auth'
 ```
 
-Можливі відповіді:
+Аплікація буде доступна за адресою: http://localhost:8080.
 
-- `201 Created` — продукт успішно створено.
-- `400 Bad Request` — продукт з таким ім’ям вже існує.
+## Перевірка безпеки (Postman)
 
-#### Отримати список продуктів
+### 1. Доступ через Bearer Token (JWT)
 
+Для тестування потрібно згенерувати JWT токен (наприклад, на [jwt.io](https://jwt.io)), підписаний приватним ключем, парним до того, що завантажений у WireMock.
+
+**Вимоги до токена:**
+- Alg: `RS256`
+- Header: `kid: "cosmo-key-1"` (має співпадати з конфігом WireMock)
+- Payload: має містити ролі:
+  ```json
+  {
+    "realm_access": {
+      "roles": ["ADMIN"]
+    }
+  }
+  ```
+
+**Запит:**
 `GET /api/v1/products`
+Auth Type: `Bearer Token` -> Вставити токен.  
+Result: `200 OK`
 
-#### Отримати продукт за ID
+### 2. Доступ через API Key
 
-`GET /api/v1/products/{id}`
+Альтернативний спосіб входу (використовується секрет з `application.yml`).
 
-#### Оновити продукт
+**Запит:**
+`GET /api/v1/products`  
+Auth Type: `No Auth`  
+Headers:
+- Key: `X-API-KEY`
+- Value: `cosmo-secret-key-123`
 
-`PUT /api/v1/products/{id}`
+Result: `200 OK`
 
-#### Видалити продукт
+### 3. Перевірка обмеження прав (Forbidden)
 
-`DELETE /api/v1/products/{id}`
-
----
-
-## Feature toggle `cosmoCats`
-
-Фіча контролюється властивістю:
-
-```yaml
-features:
-  cosmoCats:
-    enabled: true
-```
-
-- Якщо `true` — API працює у звичайному режимі.
-- Якщо `false` — будь-який виклик `/api/v1/products/**` повертає:
-
-```json
-{
-  "status": 403,
-  "error": "Forbidden",
-  "message": "Feature 'cosmoCats' is disabled",
-  "path": "/api/v1/products"
-}
-```
-
-У тестовому профілі (`application-test.yml`) фіча також **увімкнена**, щоб сценарії тестування проходили коректно.
+Спробуйте виконати `DELETE /api/v1/products/{id}` з токеном, який має тільки роль `USER`.
+Result: `403 Forbidden`.
 
 ---
 
-## Міграції бази даних (Liquibase)
+## Тести
 
-Головний файл:
+У проєкті реалізовано декілька рівнів тестування безпеки:
 
-- `src/main/resources/db/changelog/db.changelog-master.yml`
-
-Підключені чейнджсети:
-
-1. `0001-initial-schema.yml` — створення таблиць та послідовностей.
-2. `0002-make-category-id-nullable.yml` — дозвіл `NULL` для `products.category_id`.
-
-Міграції запускаються автоматично при старті Spring Boot застосунку.
-
----
-
-## Тести та звіт по покриттю
+1. **`ProductControllerIT`**: Використовує анотацію `@WithMockUser(roles = "ADMIN")` для імітації автентифікованого користувача без підняття реального контексту безпеки. Перевіряє бізнес-логіку під захистом.
+2. **`SecurityIntegrationTest`**: Full-stack тест. Піднімає WireMock, генерує пару ключів RSA на льоту, підписує токен і робить реальний запит до API. Перевіряє, чи Spring Security коректно валідує підпис токена через JWKS endpoint.
+3. **`AuthenticationTest`**: Перевіряє роботу фільтрів (API Key vs JWT) та реакцію на відсутність авторизації (401 Unauthorized).
 
 Запуск тестів:
 
@@ -214,31 +147,6 @@ features:
 ./gradlew test
 ```
 
-Генерація Jacoco-звіту:
-
-```bash
-./gradlew jacocoTestReport
-```
-
-Після виконання звіт буде доступний за шляхом:
-
-- `build/reports/jacoco/test/html/index.html`
-
----
-
-## Як завершити роботу
-
-Зупинити Spring Boot застосунок — `Ctrl + C` у консолі з `bootRun`.
-
-Зупинити та видалити контейнер PostgreSQL:
-
-```bash
-docker compose down
-```
-
----
-
 ## Висновки
 
-У ході лабораторної роботи №3 було розроблено повноцінний REST-сервіс для управління товарами CosmoCats з використанням бази даних PostgreSQL, системи міграцій Liquibase, контейнеризації через Docker та механізму feature-toggle.  
-Проєкт готовий до подальшого розширення (замовлення, інтеграції, авторизація тощо) та може слугувати основою для наступних лабораторних робіт.
+У лабораторній роботі №4 було успішно інтегровано **Spring Security** у проєкт CosmoCats. Реалізовано сучасний підхід до захисту API через **OAuth2 Resource Server** з підтримкою JWT, а також додано механізм **API Key** для технічних інтеграцій. Використання **WireMock** та **Docker** дозволило створити ізольоване середовище для розробки та тестування процесів аутентифікації без залежності від зовнішніх провайдерів (на кшталт Keycloak/Auth0).

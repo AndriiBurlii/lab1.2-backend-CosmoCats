@@ -1,4 +1,44 @@
-﻿.gradle/
+﻿# --- Gradle ---
+.gradle/
 build/
-out/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iws
 *.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# --- VS Code (якщо раптом зайдеш) ---
+.vscode/
+.factorypath
+.project
+.settings/
+.classpath
+
+# --- Spring Boot & Logs ---
+logs/
+*.log
+npm-debug.log
+yarn-error.log
+/token
+
+# --- Environment & Secrets (ВАЖЛИВО) ---
+.env
+.env.local
+config/application-local.yml
+
+# --- Docker & Local Data ---
+postgres-data/
+.DS_Store
+Thumbs.db
+
+# --- Testing ---
+/test-output/
+/reports/
+jacoco/

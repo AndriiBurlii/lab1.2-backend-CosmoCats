@@ -1,10 +1,12 @@
 package com.cosmocats.exception;
 
 import com.cosmocats.service.FeatureNotAvailableException;
+import com.cosmocats.service.ProductNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -85,7 +87,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(body(status, msg, req));
     }
 
-    // 6) Інше непередбачене -> 500
+    // 6) Доступ заборонено (Spring Security @PreAuthorize) -> 403
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        return ResponseEntity.status(status).body(body(status, ex.getMessage(), req));
+    }
+
+    // 7) Ресурс не знайдено (БД) -> 404
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(
+            ProductNotFoundException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        return ResponseEntity.status(status).body(body(status, ex.getMessage(), req));
+    }
+
+    // 8) Інше непередбачене -> 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleOther(
             Exception ex, HttpServletRequest req) {

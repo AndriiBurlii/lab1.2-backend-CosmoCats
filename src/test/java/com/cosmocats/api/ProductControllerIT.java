@@ -4,23 +4,26 @@ import com.cosmocats.CosmoCatsApplication;
 import com.cosmocats.api.dto.ProductRequest;
 import com.cosmocats.config.PostgresTestConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath; // Треба для парсингу ID
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes = {CosmoCatsApplication.class, PostgresTestConfig.class})
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@WithMockUser(roles = "ADMIN")
 class ProductControllerIT {
 
     @Autowired
@@ -29,77 +32,106 @@ class ProductControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private String createProduct(String name, BigDecimal price) throws Exception {
+    private Integer createProductAndGetId(String name, BigDecimal price) throws Exception {
         ProductRequest request = new ProductRequest();
         request.setName(name);
         request.setPrice(price);
-        request.setCategory("GADGETS");
+        request.setCategory("FOOD");
 
-        return mvc.perform(post("/api/v1/products")
+        String responseJson = mvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location",
-                        org.hamcrest.Matchers.containsString("/api/v1/products/")))
                 .andReturn()
                 .getResponse()
-                .getHeader("Location");
+                .getContentAsString();
+
+        return JsonPath.read(responseJson, "$.id");
     }
 
     @Test
-    void create_ok() throws Exception {
-        createProduct("Phone-Create", BigDecimal.valueOf(100));
-    }
+    void create_validProduct_returnsCreated() throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName("Space Food");
+        request.setPrice(BigDecimal.TEN);
+        request.setCategory("FOOD");
 
-    @Test
-    void get_ok() throws Exception {
-        String name = "Phone-Get";
-        BigDecimal price = BigDecimal.valueOf(200);
-
-        String location = createProduct(name, price);
-
-        mvc.perform(get(location))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(name))
-                .andExpect(jsonPath("$.price").value(price.intValue()));
-    }
-
-    @Test
-    void update_ok() throws Exception {
-        String originalName = "Phone-Update";
-        BigDecimal originalPrice = BigDecimal.valueOf(300);
-
-        String location = createProduct(originalName, originalPrice);
-
-        ProductRequest updateRequest = new ProductRequest();
-        updateRequest.setName("Phone-Update-Updated");
-        updateRequest.setPrice(BigDecimal.valueOf(350));
-        updateRequest.setCategory("GADGETS");
-
-        mvc.perform(put(location)
+        mvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Phone-Update-Updated"))
-                .andExpect(jsonPath("$.price").value(350));
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name", is("Space Food")));
     }
 
     @Test
-    void delete_ok() throws Exception {
-        String location = createProduct("Phone-Delete", BigDecimal.valueOf(400));
+    void get_existingProduct_returnsOk() throws Exception {
+        Integer id = createProductAndGetId("Test Get", BigDecimal.ONE);
 
-        mvc.perform(delete(location))
+        mvc.perform(get("/api/v1/products/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Test Get"))
+                .andExpect(jsonPath("$.price").value(BigDecimal.ONE.intValue()));
+    }
+
+    @Test
+    void update_existingProduct_updatesAndReturnsOk() throws Exception {
+        Integer id = createProductAndGetId("Old Name", BigDecimal.TEN);
+
+        ProductRequest updateReq = new ProductRequest();
+        updateReq.setName("New Name");
+        updateReq.setPrice(BigDecimal.valueOf(20));
+        updateReq.setCategory("TOYS");
+
+        mvc.perform(put("/api/v1/products/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("New Name"))
+                .andExpect(jsonPath("$.price").value(BigDecimal.valueOf(20).intValue()));
+    }
+
+    @Test
+    void delete_existingProduct_returnsNoContent() throws Exception {
+        Integer id = createProductAndGetId("To Delete", BigDecimal.TEN);
+
+        mvc.perform(delete("/api/v1/products/{id}", id))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void create_invalid_returnsBadRequest() throws Exception {
         ProductRequest request = new ProductRequest();
-        request.setName(""); // невалідне ім'я
-        request.setPrice(BigDecimal.valueOf(-1)); // невалідна ціна
+        request.setName("");
+        request.setPrice(BigDecimal.valueOf(-1));
         request.setCategory("GADGETS");
 
         mvc.perform(post("/api/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void get_nonExistingProduct_returnsNotFound() throws Exception {
+        mvc.perform(get("/api/v1/products/{id}", 999_999L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void delete_asUser_returnsForbidden() throws Exception {
+        mvc.perform(delete("/api/v1/products/{id}", 999))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void update_invalid_returnsBadRequest() throws Exception {
+        ProductRequest request = new ProductRequest();
+        request.setName(""); // невалідне ім'я
+        request.setPrice(BigDecimal.valueOf(-5)); // невалідна ціна
+        request.setCategory("GADGETS");
+
+        mvc.perform(put("/api/v1/products/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());

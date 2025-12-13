@@ -1,0 +1,28 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/.well-known/jwks.json"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "keys": [
+            {
+              "kty": "RSA",
+              "e": "AQAB",
+              "use": "sig",
+              "kid": "cosmo-key-1",
+              "alg": "RS256",
+              "n": "4EaHXdtlixfNnEgR0QBqK4BAUHHzs9uRfSSrptwa0NcBwEZzGQJXheFqigqpVxdTdvTf8PBSUuCb9qS-dPoe97ghUSF3CHMFEVsfvwTA9xHseL3kF6alt-dSDrsxNAnKNSNeWYS2JFLBp5byYzTjpliMwMfTaTdwetPj1IOCqoJlGYWHYyR9si8-qyFu9YpA5-RdorfchRVKkro08hr_5hespysdmQ8UTItMbHxKPSPmWLyKy-DS7-sugZQGn5JT-58bYGdBCW28zPLppgPY4AD5-VOSw8-S0YVToQ0lVXPcKvHpkrci5JqVI8ZQHlp1r1YUiCjfZB_QiV_uHy3hFQ"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
